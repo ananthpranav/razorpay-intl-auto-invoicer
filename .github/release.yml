@@ -1,4 +1,17 @@
-# Settings for GitHub's generated release notes.
+# Groups GitHub's generated release notes by pull request label.
 changelog:
   exclude:
-    labels: [release]
+    labels: [skip-changelog]
+  categories:
+    - title: Breaking changes
+      labels: [breaking-change]
+    - title: New features
+      labels: [enhancement]
+    - title: Bug fixes
+      labels: [bug]
+    - title: Documentation
+      labels: [documentation]
+    - title: Dependencies
+      labels: [dependencies]
+    - title: Other changes
+      labels: ["*"]

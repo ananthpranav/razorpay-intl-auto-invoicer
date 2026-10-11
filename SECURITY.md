@@ -4,6 +4,10 @@
 
 Please report security problems privately: open the repository's **Security** tab and click **Report a vulnerability**. Don't open a public issue for them.
 
+## Supported versions
+
+Fixes go into the latest release. Please update to it before reporting a problem.
+
 ## Keeping your setup safe
 
 - `.env`, `clients.json`, `bank-details.json`, `output/` (PDFs and reports) and `data/` (payment state) hold your keys and your clients' details. They're in `.gitignore`, but check `git status` before you commit.

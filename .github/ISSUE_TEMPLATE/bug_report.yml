@@ -1,0 +1,38 @@
+name: Bug report
+description: Something doesn't work the way the README says it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please don't paste API keys, client names, emails, addresses or bank details.
+        For security problems, use private reporting instead (Security tab → Report a vulnerability).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you run, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant log lines. Check them for private details before posting.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The image tag (for example 1.2.0) or the commit you're running.
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: How do you run it?
+      options:
+        - Docker image
+        - Node (npm start or cron)
+    validations:
+      required: true

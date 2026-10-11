@@ -163,7 +163,7 @@ Node runs the TypeScript directly, so there's no build step. Keep it running wit
 
 ## Contributing
 
-Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch and release flow, and [SECURITY.md](SECURITY.md) to report a security problem privately.
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [code of conduct](CODE_OF_CONDUCT.md). Report security problems privately, as described in [SECURITY.md](SECURITY.md). Changes are listed on the [releases page](https://github.com/ananthpranav/razorpay-intl-auto-invoicer/releases).
 
 ## License
 

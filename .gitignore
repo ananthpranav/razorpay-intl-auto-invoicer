@@ -1,0 +1,14 @@
+# Secrets and private data: never commit these
+.env
+.env.*
+!.env.example
+clients.json
+bank-details.json
+output/
+data/
+*.pdf
+
+# Dependencies and tooling
+node_modules/
+*.log
+.DS_Store

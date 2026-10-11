@@ -1,0 +1,100 @@
+name: Release
+
+# Publishing a GitHub release (tag vX.Y.Z) builds and pushes the Docker image.
+# Run it by hand with an existing tag to rebuild that release, e.g. after a Node base image fix.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to rebuild, e.g. v1.2.0
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check the release
+        id: release
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$TAG' is not a vX.Y.Z release tag."
+            exit 1
+          fi
+          prerelease=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)
+          newest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          stable=$([[ "$prerelease" == false ]] && echo true || echo false)
+          {
+            echo "image=ghcr.io/${OWNER,,}/razorpay-intl-auto-invoicer"
+            echo "stable=$stable"
+            echo "latest=$([[ "$stable" == true && "$newest" == "$TAG" ]] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Stable releases get x.y.z, x.y and x; the newest stable release also gets latest.
+      # Pre-releases (v1.2.0-rc.1) only get their exact tag.
+      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: meta
+        with:
+          images: ${{ steps.release.outputs.image }}
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }},enable=${{ steps.release.outputs.stable }}
+            type=semver,pattern={{major}},value=${{ env.TAG }},enable=${{ steps.release.outputs.stable }}
+            type=raw,value=latest,enable=${{ steps.release.outputs.latest }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        id: build
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ steps.release.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Summary
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          { echo "Published:"; echo '```'; echo "$TAGS"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

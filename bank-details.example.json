@@ -1,0 +1,31 @@
+{
+  "USD": {
+    "title": "Pay by bank transfer (ACH / Fedwire)",
+    "fields": [
+      { "label": "Account holder", "value": "Your Business Name" },
+      { "label": "Bank name", "value": "Example Bank N.A." },
+      { "label": "Account number", "value": "000000000000" },
+      { "label": "Routing number (ACH)", "value": "000000000" },
+      { "label": "Account type", "value": "Checking" }
+    ],
+    "note": "Please use the invoice number as the payment reference."
+  },
+  "GBP": {
+    "title": "Pay by bank transfer (Faster Payments)",
+    "fields": [
+      { "label": "Account holder", "value": "Your Business Name" },
+      { "label": "Account number", "value": "00000000" },
+      { "label": "Sort code", "value": "00-00-00" }
+    ],
+    "note": "Please use the invoice number as the payment reference."
+  },
+  "EUR": {
+    "title": "Pay by bank transfer (SEPA)",
+    "fields": [
+      { "label": "Account holder", "value": "Your Business Name" },
+      { "label": "IBAN", "value": "XX00 0000 0000 0000 0000 00" },
+      { "label": "BIC / SWIFT", "value": "XXXXXXXXXXX" }
+    ],
+    "note": "Please use the invoice number as the payment reference."
+  }
+}

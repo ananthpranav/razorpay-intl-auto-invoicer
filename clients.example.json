@@ -1,0 +1,36 @@
+[
+  {
+    "label": "client-a",
+    "customerId": "cust_XXXXXXXXXXXXXX",
+    "currency": "USD",
+    "items": [
+      { "type": "hourly", "name": "Software development services", "rate": 25, "hours": 140 }
+    ],
+    "billTo": {
+      "name": "Example Corp",
+      "line1": "100 Example Street",
+      "city": "San Francisco",
+      "state": "CA",
+      "postalCode": "94105",
+      "country": "United States"
+    }
+  },
+  {
+    "label": "client-b",
+    "customerId": "cust_YYYYYYYYYYYYYY",
+    "currency": "USD",
+    "items": [
+      { "type": "hourly", "name": "Software development services", "rate": 25, "hours": 20 }
+    ],
+    "emailTo": ["accounts@example.com"]
+  },
+  {
+    "label": "client-c",
+    "customerId": "cust_ZZZZZZZZZZZZZZ",
+    "currency": "GBP",
+    "items": [
+      { "type": "fixed", "name": "Monthly retainer", "amount": 250 }
+    ],
+    "dueInDays": 30
+  }
+]

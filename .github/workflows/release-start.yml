@@ -1,0 +1,95 @@
+name: Start release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump from the latest release
+        type: choice
+        options: [minor, patch, major]
+        default: minor
+      version:
+        description: Exact version instead, e.g. 1.0.0 (optional)
+        type: string
+        required: false
+
+concurrency:
+  group: release-start
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+jobs:
+  start:
+    name: Cut release branch
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Work out the version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+          EXACT: ${{ inputs.version }}
+        run: ./.github/scripts/next-version.sh
+
+      - name: Check there is something to release
+        run: |
+          git fetch origin main
+          if [[ -z "$(git log --no-merges --oneline origin/main..HEAD)" ]]; then
+            echo "::error::dev has nothing new compared with main."
+            exit 1
+          fi
+
+      - name: Create the release branch
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          branch="release-$VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "::error::$branch already exists."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$branch"
+
+      - name: Open the pull request into main
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS: ${{ steps.version.outputs.previous }}
+        run: |
+          args=(-f tag_name="v$VERSION" -f target_commitish="release-$VERSION")
+          [[ -n "$PREVIOUS" ]] && args+=(-f previous_tag_name="$PREVIOUS")
+          notes=$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${args[@]}" --jq .body)
+          body=$(printf 'Merging this pull request publishes the Docker image and release `v%s`.\n\n%s\n' "$VERSION" "$notes")
+          gh label create release --color 0e8a16 --description "Release pull request" --force >/dev/null
+          gh pr create --base main --head "release-$VERSION" --title "Release $VERSION" --body "$body" --label release
+
+      # CI for pull requests opened with GITHUB_TOKEN waits for approval before it starts.
+      - name: Start CI on the pull request
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          run=""
+          for attempt in $(seq 1 24); do
+            run=$(gh run list --workflow ci.yml --branch "release-$VERSION" --event pull_request \
+              --json databaseId,conclusion --jq '.[0] | select(.) | "\(.databaseId) \(.conclusion)"' || true)
+            [[ -n "$run" ]] && break
+            sleep 5
+          done
+          read -r id conclusion <<< "$run"
+          if [[ "$conclusion" == "action_required" ]] && gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/approve" >/dev/null; then
+            echo "Approved CI run $id for the pull request."
+          elif [[ -n "$id" && "$conclusion" != "action_required" ]]; then
+            echo "CI is already running for the pull request ($id)."
+          else
+            echo "::warning::Couldn't start CI for the pull request, so running it on the branch. Approve the waiting run on the pull request to see the checks there."
+            gh workflow run ci.yml --ref "release-$VERSION"
+          fi

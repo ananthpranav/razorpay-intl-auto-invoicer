@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main, "release-*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  branch-policy:
+    name: Branch policy
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check the source branch
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          case "$BASE" in
+            main)
+              [[ "$HEAD" =~ ^release-[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+                { echo "::error::Only release-x.y.z branches can merge into main, not '$HEAD'."; exit 1; } ;;
+            dev)
+              [[ "$HEAD" =~ ^(feature|hotfix)/.+ ]] ||
+                { echo "::error::Only feature/* and hotfix/* branches can merge into dev, not '$HEAD'."; exit 1; } ;;
+          esac
+          echo "'$HEAD' into '$BASE' is allowed."
+
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build the Docker image
+        run: docker build -t invoicer:ci .
+      - name: Smoke test the image
+        run: |
+          docker run --rm invoicer:ci --help
+          mkdir -p "$RUNNER_TEMP/init" && chmod 777 "$RUNNER_TEMP/init"
+          docker run --rm -v "$RUNNER_TEMP/init:/config" invoicer:ci init /config
+          test -f "$RUNNER_TEMP/init/.env" && test -f "$RUNNER_TEMP/init/clients.json"
+
+  node-22:
+    name: Node 22
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test

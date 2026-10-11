@@ -1,0 +1,4 @@
+# Settings for GitHub's generated release notes.
+changelog:
+  exclude:
+    labels: [release]

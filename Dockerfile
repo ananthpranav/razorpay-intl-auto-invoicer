@@ -1,4 +1,4 @@
-FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4
 
 LABEL org.opencontainers.image.title="razorpay-intl-auto-invoicer" \
       org.opencontainers.image.description="Monthly Razorpay invoices for international clients paid by MoneySaver bank transfer" \

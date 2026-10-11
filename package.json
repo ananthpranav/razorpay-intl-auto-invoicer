@@ -1,0 +1,35 @@
+{
+  "name": "razorpay-intl-auto-invoicer",
+  "version": "0.1.0",
+  "description": "Creates monthly Razorpay invoices for international clients, renders PDFs with bank-transfer details and emails them.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "invoice": "node src/cli.ts invoice",
+    "dry-run": "node src/cli.ts invoice --dry-run",
+    "payments": "node src/cli.ts payments",
+    "report": "node src/cli.ts report",
+    "customers": "node src/cli.ts customers",
+    "probe": "node src/cli.ts probe",
+    "start": "node src/cli.ts start",
+    "init": "node src/cli.ts init",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "node-cron": "4.6.0",
+    "nodemailer": "10.0.10",
+    "pdfkit": "0.20.2",
+    "razorpay": "2.9.8",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.2",
+    "@types/pdfkit": "0.17.6",
+    "typescript": "7.0.2"
+  }
+}

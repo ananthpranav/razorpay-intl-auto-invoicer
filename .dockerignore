@@ -1,0 +1,16 @@
+# Keep secrets and private data out of the build context and the image
+.env
+.env.*
+!.env.example
+clients.json
+bank-details.json
+output/
+data/
+*.pdf
+
+node_modules/
+.git/
+.github/
+test/
+*.log
+.DS_Store

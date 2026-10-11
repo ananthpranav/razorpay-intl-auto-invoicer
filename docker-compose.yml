@@ -1,0 +1,24 @@
+# Runs the published image. Put this file next to your .env, clients.json and bank-details.json.
+services:
+  invoicer:
+    image: ghcr.io/ananthpranav/razorpay-intl-auto-invoicer:latest
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    env_file: .env
+    environment:
+      CLIENTS_DATA_PATH: /config/clients.json
+      BANK_DETAILS_PATH: /config/bank-details.json
+      OUTPUT_DIR: /app/output
+      STATE_PATH: /app/data/state.json
+    volumes:
+      - ./clients.json:/config/clients.json:ro
+      - ./bank-details.json:/config/bank-details.json:ro
+      - invoices:/app/output
+      - state:/app/data
+
+volumes:
+  invoices:
+  state:
